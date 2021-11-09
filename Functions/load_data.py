@@ -1,10 +1,9 @@
-#-------------------------------------------------Libraries
 import pandas as pd
 import numpy as np
 import os
 
-#-------------------------------------------------Read data functions
-def load_data(datafile,Spec,sample = None):
+# Read data functions
+def load_data(datafile, Spec, sample=None):
 
     # loadData Load vintage of data from file and format as structure
     #
@@ -34,42 +33,43 @@ def load_data(datafile,Spec,sample = None):
         When converting dates to ordinal format, we need to add 366 days to match with Matlab date numeric values
     """
 
-    if not os.path.splitext(datafile)[1] in [".xlsx",".xls"]:
+    if not os.path.splitext(datafile)[1] in [".xlsx", ".xls"]:
         ValueError("File is not an EXCEL FILE")
 
-    Z,Time,Mnem = readData(datafile)
+    Z, Time, Mnem = readData(datafile)
     #    Z : raw (untransformed) observed data
     # Time : observation periods for the time series data
     # Mnem : series ID for each variable
 
     # Sort data based on model specification
-    Z,_ = sortData(Z.copy(),Mnem.copy(),Spec)
+    Z, _ = sortData(Z.copy(), Mnem.copy(), Spec)
 
     # since now Mnem == Spec.SeriesID
     del Mnem
 
     # Transform data based on model specification
-    X,Time,Z = transformData(Z.copy(),Time.copy(),Spec)
+    X, Time, Z = transformData(Z.copy(), Time.copy(), Spec)
 
     # Drop data not in estimation sample
-    if sample != None:
-        X,Time,Z = dropData(X.copy(),Time.copy(),Z.copy(),sample)
+    if sample is not None:
+        X, Time, Z = dropData(X.copy(), Time.copy(), Z.copy(), sample)
 
-    return X,Time,Z
+    return X, Time, Z
 
 
 def readData(datafile):
 
     # readData Read data from Microsoft Excel workbook file
 
-    dat  = pd.read_excel(datafile)
+    dat = pd.read_excel(datafile)
     Mnem = np.array([i for i in list(dat.columns) if i != "Date"])
-    Z    = dat[Mnem].to_numpy(copy=True)
-    Time = dat.Date.apply(lambda x: x.toordinal()+366).to_numpy(copy= True)
+    Z = dat[Mnem].to_numpy(copy=True)
+    Time = dat.Date.apply(lambda x: x.toordinal()+366).to_numpy(copy=True)
 
-    return Z,Time,Mnem
+    return Z, Time, Mnem
 
-def sortData(Z,Mnem,Spec):
+
+def sortData(Z, Mnem, Spec):
 
     # sortData Sort series by order of model specification
 
@@ -131,9 +131,9 @@ def transformData(Z,Time,Spec):
         series  = Spec.SeriesName[i]
 
         if formula == 'lin':
-            X[:,i] = Z[:,i].copy()
+            X[:, i] = Z[:, i].copy()
         elif formula == 'chg':
-            X[t1::step,i] = formula_dict['chg'](Z[:,i].copy())
+            X[t1::step, i] = formula_dict['chg'](Z[:, i].copy())
         elif formula == 'ch1':
             X[12+t1::step, i] = formula_dict['ch1'](Z[:, i].copy())
         elif formula == 'pch':
