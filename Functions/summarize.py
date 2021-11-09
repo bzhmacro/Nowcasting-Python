@@ -1,10 +1,8 @@
-#-------------------------------------------------Libraries
 import pandas as pd
 import numpy as np
 from datetime import datetime as dt
 
 
-#-------------------------------------------------Functions
 def summarize(X, Time, Spec):
     """
     summarize Display the detail table for data entering the DFM
@@ -17,21 +15,23 @@ def summarize(X, Time, Spec):
     print('Table 2: Data Summary \n')
 
     # Number of rows and data series
-    T,N = X.shape
+    T, N = X.shape
 
-    print("N =     {} data series".format(N))
-    print("T =     {} observations from {} to {} \n".format(T,
-                                                         dt.fromordinal(Time[0] - 366).strftime('%Y-%m-%d'),
-                                                         dt.fromordinal(Time[-1] - 366).strftime('%Y-%m-%d')))
+    print(f"N =     {N} data series")
+    start = dt.fromordinal(Time[0] - 366).strftime('%Y-%m-%d')
+    end = dt.fromordinal(Time[-1] - 366).strftime('%Y-%m-%d')
+    print(f"T={T} observations from {start} to {end} \n")
 
     # create base table to add additional columns
     base = pd.DataFrame(X, columns=Spec.SeriesName)
 
     # Create additional columns
-    time_range    = base.apply(lambda x: data_table_prep(1,x,Time = Time)).values
-    max_min_range = base.apply(lambda x: data_table_prep(2,x,Time = Time)).values
-    Frequency     = data_table_prep(3,freq_dict={'m':"Monthly", "q":"Quarterly"},Spec=Spec)
-    Units         = data_table_prep(4, N=N,Spec=Spec)
+    time_range = base.apply(lambda x: data_table_prep(2, x, Time=Time)).values
+    max_min_range = base.apply(
+        lambda x: data_table_prep(2, x, Time=Time)).values
+    Frequency = data_table_prep(
+        3, freq_dict={'m': "Monthly", "q": "Quarterly"}, Spec=Spec)
+    Units = data_table_prep(4, N=N, Spec=Spec)
 
     # Transform base dataframe
     base = base.describe().T
@@ -52,14 +52,16 @@ def summarize(X, Time, Spec):
                     "Min/Max Dates"]
 
     # Rename index values of dataframe
-    base.rename(index = {base.index[i]:base.index[i] + " [{}]".format(Spec.SeriesID[i])
-                         for i in range(N)},
-                inplace = True)
+    base.rename(index={base.index[i]: base.index[i] + f" [{Spec.SeriesID[i]}]"
+                       for i in range(N)},
+                inplace=True)
 
     # Print dataframe
     print(base[orderColumns])
 
-def data_table_prep(option,x=None,freq_dict=None,Time=None,N=None,Spec=None):
+
+def data_table_prep(option, x=None, freq_dict=None, Time=None, N=None,
+                    Spec=None):
     """
     The param option takes values from 1 to 4
 
@@ -72,7 +74,8 @@ def data_table_prep(option,x=None,freq_dict=None,Time=None,N=None,Spec=None):
         3.) Find the first value that is not NA (will be 1)
         4.) Find the max value
         5.) First value and max value are the first and last date
-        :return: a string containing the start and last date values that are not NA
+        :return: a string containing the start and last date values that are
+         not NA
 
     Option 2:
         :param x: a pd.Series
@@ -83,7 +86,8 @@ def data_table_prep(option,x=None,freq_dict=None,Time=None,N=None,Spec=None):
         :return: a string containing dates that represent min and max values
 
     Option 3:
-        :param freq_dict: dictionary containing abbreviated as keys with values that are full names: e.g. "q" -> "Quarterly"
+        :param freq_dict: dictionary containing abbreviated as keys with
+         values that are full names: e.g. "q" -> "Quarterly"
         1.) Convert the abbreviated form of frequency to full name
          :return: a string containing full name of the frequency
 
@@ -94,11 +98,11 @@ def data_table_prep(option,x=None,freq_dict=None,Time=None,N=None,Spec=None):
     """
 
     if option == 1:
-        truth   = (np.isnan(x) == False).cumsum()
-        first   = Time[np.where(truth == 1)[0][0]]
-        last    = Time[np.max(truth) - 1] # subtracted by 1 to get index value
+        truth = (np.isnan(x) is False).cumsum()
+        first = Time[np.where(truth == 1)[0][0]]
+        last = Time[np.max(truth) - 1]  # subtracted by 1 to get index value
         return "{} to {}".format(dt.fromordinal(first - 366).strftime('%b-%Y'),
-                                dt.fromordinal(last - 366).strftime('%b-%Y'))
+                                 dt.fromordinal(last - 366).strftime('%b-%Y'))
     elif option == 2:
         min = Time[np.where(x == np.min(x))[0][0]]
         max = Time[np.where(x == np.max(x))[0][0]]
@@ -118,7 +122,8 @@ def data_table_prep(option,x=None,freq_dict=None,Time=None,N=None,Spec=None):
     else:
         ValueError("Option needed: must be 1 or 2")
 
-def unitTransformed(unit,transform,freq):
+
+def unitTransformed(unit, transform, freq):
     """
     :param unit: a data series' unit type
     :param transform: what transformation was applied to the data series
@@ -139,6 +144,6 @@ def unitTransformed(unit,transform,freq):
     elif "pca" == transform and freq == "q":
         unit_transformed = "QoQ AR %"
     else:
-        unit_transformed = unit + " [{}]".format(transform)
+        unit_transformed = unit + f" [{transform}]"
 
     return unit_transformed
