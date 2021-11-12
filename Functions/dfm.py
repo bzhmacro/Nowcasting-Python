@@ -93,7 +93,7 @@ def dfm(X, Spec, threshold=1e-5, max_iter=5000):
     i_idio = np.append(np.ones(N-nQ), np.zeros(nQ)
                        ).reshape((-1, 1), order="F") == 1
 
-    # R*Lambda = q; Contraints on the loadings of the quartrly variables
+    # R*Lambda = q; Contraints on the loadings of the quarterly variables
     R_mat = np.array([2, -1, 0, 0, 0, 3, 0, -1, 0, 0, 2, 0,
                       0, -1, 0, 1, 0, 0, 0, -1]).reshape((4, 5))
     q = np.zeros((4, 1))
